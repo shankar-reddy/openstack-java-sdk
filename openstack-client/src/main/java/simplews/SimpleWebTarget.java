@@ -106,6 +106,15 @@ public class SimpleWebTarget implements WebTarget {
 
 	private URI extendUri(String uri) {
 		String newUri = this.uri.toString();
+		if (uri.startsWith("/")) {
+			if (newUri.endsWith("/")) {
+				uri = uri.substring(1);
+			}
+		} else {
+			if (!newUri.endsWith("/")) {
+				newUri += "/";
+			}
+		}
 		newUri += uri;
 		try {
 			return new URI(newUri);
