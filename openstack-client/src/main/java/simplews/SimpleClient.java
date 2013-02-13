@@ -191,7 +191,7 @@ public class SimpleClient implements Client {
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException("Invalid URI: " + uri, e);
 		}
-		return new SimpleWebTarget(this, parsed);
+		return new SimpleWebTarget(this, this.configuration, parsed);
 	}
 
 	@Override

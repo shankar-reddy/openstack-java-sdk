@@ -24,11 +24,12 @@ public class SimpleWebTarget implements WebTarget {
 
 	SimpleConfiguration configuration;
 
-	public SimpleWebTarget(SimpleClient client, URI uri) {
+	public SimpleWebTarget(SimpleClient client,
+			SimpleConfiguration parentConfiguration, URI uri) {
 		this.client = client;
 		this.uri = uri;
 
-		this.configuration = new SimpleConfiguration(client.configuration);
+		this.configuration = new SimpleConfiguration(parentConfiguration);
 	}
 
 	@Override
@@ -100,7 +101,7 @@ public class SimpleWebTarget implements WebTarget {
 
 	@Override
 	public WebTarget path(String path) throws NullPointerException {
-		return new SimpleWebTarget(client, extendUri(path));
+		return new SimpleWebTarget(client, configuration, extendUri(path));
 	}
 
 	private URI extendUri(String uri) {
