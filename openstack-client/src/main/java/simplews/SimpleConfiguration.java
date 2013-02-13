@@ -238,7 +238,8 @@ public class SimpleConfiguration implements FeatureContext, Providers,
 			}
 		}
 
-		throw new ClientException("Cannot find MessageBodyReader for: " + type);
+		throw new ClientException("Cannot find MessageBodyReader for: " + type
+				+ " mediaType=" + mediaType);
 	}
 
 	@Override
