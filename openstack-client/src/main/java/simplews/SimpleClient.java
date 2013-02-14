@@ -6,18 +6,10 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.Entity;
@@ -36,11 +28,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -59,62 +46,7 @@ public class SimpleClient implements Client {
 	}
 
 	public SimpleClient() {
-		this(noSslCheck(new DefaultHttpClient()));
-	}
-
-	public static HttpClient noSslCheck(HttpClient base) {
-		try {
-			SSLContext ctx = SSLContext.getInstance("TLS");
-			X509TrustManager tm = new X509TrustManager() {
-
-				@Override
-				public void checkClientTrusted(X509Certificate[] xcs,
-						String string) throws CertificateException {
-				}
-
-				@Override
-				public void checkServerTrusted(X509Certificate[] xcs,
-						String string) throws CertificateException {
-				}
-
-				@Override
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-			};
-			X509HostnameVerifier verifier = new X509HostnameVerifier() {
-
-				@Override
-				public void verify(String string, SSLSocket ssls)
-						throws IOException {
-				}
-
-				@Override
-				public void verify(String string, X509Certificate xc)
-						throws SSLException {
-				}
-
-				@Override
-				public void verify(String string, String[] strings,
-						String[] strings1) throws SSLException {
-				}
-
-				@Override
-				public boolean verify(String string, SSLSession ssls) {
-					return true;
-				}
-			};
-			ctx.init(null, new TrustManager[] { tm }, null);
-			SSLSocketFactory ssf = new SSLSocketFactory(ctx);
-			ssf.setHostnameVerifier(verifier);
-			ClientConnectionManager ccm = base.getConnectionManager();
-			SchemeRegistry sr = ccm.getSchemeRegistry();
-			sr.register(new Scheme("https", ssf, 443));
-			return new DefaultHttpClient(ccm, base.getParams());
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return null;
-		}
+		this(new DefaultHttpClient());
 	}
 
 	@Override
