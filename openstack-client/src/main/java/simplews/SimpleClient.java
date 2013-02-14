@@ -191,7 +191,7 @@ public class SimpleClient implements Client {
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException("Invalid URI: " + uri, e);
 		}
-		return new SimpleWebTarget(this, this.configuration, parsed);
+		return new SimpleWebTarget(this, this.configuration, parsed, null);
 	}
 
 	@Override
@@ -264,7 +264,7 @@ public class SimpleClient implements Client {
 					annotations, mediaType, httpHeaders, entityStream);
 			return t;
 		} catch (IOException e) {
-			throw new ClientException("Error writing message body", e);
+			throw new ClientException("Error reading response message body", e);
 		} finally {
 			if (entityStream != null) {
 				try {

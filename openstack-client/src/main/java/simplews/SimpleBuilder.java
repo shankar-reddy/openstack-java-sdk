@@ -26,6 +26,7 @@ import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
@@ -47,7 +48,8 @@ public class SimpleBuilder implements Builder {
 
 	@Override
 	public Response get() throws ClientException {
-		throw new UnsupportedOperationException();
+		HttpGet req = new HttpGet(getUri());
+		return doRawRequest(null, req);
 	}
 
 	@Override
@@ -99,11 +101,46 @@ public class SimpleBuilder implements Builder {
 
 	<T> T doAction(Entity<?> entity, GenericType<T> responseType,
 			HttpUriRequest httpClientRequest) {
+		HttpClient client = getHttpClient();
+		HttpResponse response = null;
+
+		try {
+			response = doRequest0(client, entity, httpClientRequest);
+
+			MultivaluedMap<String, String> responseHeaders = getResponseHeaderMap(response);
+
+			return processResponse(responseType, responseHeaders, response);
+		} finally {
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
+		}
+	}
+
+	Response doRawRequest(Entity<?> entity, HttpUriRequest httpClientRequest) {
+		HttpClient client = getHttpClient();
+		HttpResponse response = null;
+
+		try {
+			response = doRequest0(client, null, httpClientRequest);
+
+			SimpleResponse ret = new SimpleResponse(response);
+			// Pass ownership to SimpleResponse
+			response = null;
+			return ret;
+		} finally {
+			if (response != null) {
+				EntityUtils.consumeQuietly(response.getEntity());
+			}
+		}
+	}
+
+	HttpResponse doRequest0(HttpClient client, Entity<?> entity,
+			HttpUriRequest httpClientRequest) {
 		SimpleClientRequest request = new SimpleClientRequest();
 		request.httpClientRequest = httpClientRequest;
 		request.httpHeaders.putAll(this.httpHeaders);
 
-		HttpClient client = getHttpClient();
 		HttpResponse response = null;
 
 		try {
@@ -125,9 +162,9 @@ public class SimpleBuilder implements Builder {
 
 			response = client.execute(request.httpClientRequest);
 
-			MultivaluedMap<String, String> responseHeaders = getResponseHeaderMap(response);
-
-			return processResponse(responseType, responseHeaders, response);
+			HttpResponse ret = response;
+			response = null; // Don't clean up
+			return ret;
 		} catch (IOException e) {
 			throw new ClientException("Error during HTTP request", e);
 		} finally {
@@ -175,7 +212,8 @@ public class SimpleBuilder implements Builder {
 
 	@Override
 	public Response head() throws ClientException {
-		throw new UnsupportedOperationException();
+		HttpHead headRequest = new HttpHead(getUri());
+		return doRawRequest(null, headRequest);
 	}
 
 	@Override

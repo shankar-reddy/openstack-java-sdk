@@ -2,7 +2,9 @@ package simplews;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
@@ -10,11 +12,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ByteArrayEntity;
 
 public class SimpleWebTarget implements WebTarget {
@@ -22,12 +26,16 @@ public class SimpleWebTarget implements WebTarget {
 	private final SimpleClient client;
 	private final URI uri;
 
+	final MultivaluedMap<String, String> queryParams;
+
 	SimpleConfiguration configuration;
 
 	public SimpleWebTarget(SimpleClient client,
-			SimpleConfiguration parentConfiguration, URI uri) {
+			SimpleConfiguration parentConfiguration, URI uri,
+			MultivaluedMap<String, String> queryParams) {
 		this.client = client;
 		this.uri = uri;
+		this.queryParams = queryParams;
 
 		this.configuration = new SimpleConfiguration(parentConfiguration);
 	}
@@ -91,7 +99,25 @@ public class SimpleWebTarget implements WebTarget {
 
 	@Override
 	public URI getUri() {
-		return uri;
+		URI withQueryParams = uri;
+
+		if (queryParams != null && !queryParams.isEmpty()) {
+			URIBuilder uriBuilder = new URIBuilder(uri);
+
+			for (Entry<String, List<String>> entry : queryParams.entrySet()) {
+				String name = entry.getKey();
+				for (String value : entry.getValue()) {
+					uriBuilder.addParameter(name, value);
+				}
+			}
+			try {
+				withQueryParams = uriBuilder.build();
+			} catch (URISyntaxException e) {
+				throw new IllegalArgumentException("Error building URI", e);
+			}
+		}
+
+		return withQueryParams;
 	}
 
 	@Override
@@ -101,25 +127,32 @@ public class SimpleWebTarget implements WebTarget {
 
 	@Override
 	public WebTarget path(String path) throws NullPointerException {
-		return new SimpleWebTarget(client, configuration, extendUri(path));
+		return new SimpleWebTarget(client, configuration, extendUri(path),
+				this.queryParams);
 	}
 
-	private URI extendUri(String uri) {
-		String newUri = this.uri.toString();
-		if (uri.startsWith("/")) {
-			if (newUri.endsWith("/")) {
-				uri = uri.substring(1);
+	private URI extendUri(String extension) {
+		URIBuilder uriBuilder = new URIBuilder(this.uri);
+		String path = uri.getPath();
+
+		if (extension.startsWith("/")) {
+			if (path.endsWith("/")) {
+				extension = extension.substring(1);
 			}
 		} else {
-			if (!newUri.endsWith("/")) {
-				newUri += "/";
+			if (!path.endsWith("/")) {
+				path += "/";
 			}
 		}
-		newUri += uri;
+		path += extension;
+
+		uriBuilder.setPath(path);
+
 		try {
-			return new URI(newUri);
+			return uriBuilder.build();
 		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException("Invalid URI: " + newUri, e);
+			throw new IllegalArgumentException("Invalid URI: "
+					+ uriBuilder.toString(), e);
 		}
 	}
 
@@ -168,7 +201,19 @@ public class SimpleWebTarget implements WebTarget {
 	@Override
 	public WebTarget queryParam(String name, Object... values)
 			throws NullPointerException {
-		throw new UnsupportedOperationException();
+		MultivaluedMap<String, String> newQueryParams = queryParams != null ? new MultivaluedHashMap<String, String>(
+				queryParams) : new MultivaluedHashMap<String, String>();
+
+		if (values.length == 1 && values[0] == null) {
+			newQueryParams.remove(name);
+		} else {
+			for (Object value : values) {
+				newQueryParams.add(name, value.toString());
+			}
+		}
+
+		return new SimpleWebTarget(this.client, this.configuration, this.uri,
+				newQueryParams);
 	}
 
 	@Override
