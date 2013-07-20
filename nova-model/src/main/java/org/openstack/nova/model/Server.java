@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonRootName;
 
 @JsonRootName("server")
-public class Server implements Serializable {
+public class Server implements Serializable{
 	
 	public static final class Addresses implements Serializable {
 		
@@ -20,6 +20,9 @@ public class Server implements Serializable {
 			private String version;
 			
 			private String addr;
+			
+			@JsonProperty("OS-EXT-IPS:type")
+			private String type;
 
 			/**
 			 * @return the version
@@ -34,13 +37,17 @@ public class Server implements Serializable {
 			public String getAddr() {
 				return addr;
 			}
+			
+			public String getType() {
+				return type;
+			}
 
 			/* (non-Javadoc)
 			 * @see java.lang.Object#toString()
 			 */
 			@Override
 			public String toString() {
-				return "Address [version=" + version + ", addr=" + addr + "]";
+				return "Address [version=" + version + ", addr=" + addr + ", type=" + type + "]";
 			}
 			
 		}
@@ -162,6 +169,9 @@ public class Server implements Serializable {
 	
 	@JsonProperty("OS-EXT-SRV-ATTR:hypervisor_hostname")
 	private String hypervisorHostname;
+	
+	@JsonProperty("OS-EXT-AZ:availability_zone")
+	private String availability_zone;
 	
 	@JsonProperty("OS-DCF:diskConfig")
 	private String diskConfig;
@@ -365,6 +375,15 @@ public class Server implements Serializable {
 	public String getHypervisorHostname() {
 		return hypervisorHostname;
 	}
+	
+	
+
+	/**
+	 * @return the availability_zone
+	 */
+	public String getAvailability_zone() {
+		return availability_zone;
+	}
 
 	/**
 	 * @return the diskConfig
@@ -404,6 +423,7 @@ public class Server implements Serializable {
 				+ taskState + ", powerState=" + powerState + ", vmState="
 				+ vmState + ", host=" + host + ", instanceName=" + instanceName
 				+ ", hypervisorHostname=" + hypervisorHostname
+				+ ", availability_zone=" + availability_zone
 				+ ", diskConfig=" + diskConfig + ", uuid=" + uuid
 				+ ", adminPass=" + adminPass + "]";
 	}
