@@ -1,5 +1,9 @@
 h1. OpenStack Java SDK v2.0
 
+h3. OpenStack Java SDK v2.0 an open source library that helps you get started in the cloud and utilizes your Java development skills. 
+The OpenStack Java SDK v2.0 API gives you the freedom to use portable abstractions or cloud-specific features.
+
+
 h1. Important
 
 You can continue using the latest source from v1.x essex branch
